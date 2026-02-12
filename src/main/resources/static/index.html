@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sistema de Usuários</title>
+    <style>
+        :root{
+            --r: 22px;
+            --r2: 16px;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+            /* Apple-ish Light */
+            --bg0:#F5F7FB;
+            --bg1:#EEF2FF;
+            --glass: rgba(255,255,255,.62);
+            --glass2: rgba(255,255,255,.44);
+            --stroke: rgba(15,23,42,.10);
+            --stroke2: rgba(15,23,42,.14);
+            --text:#0F172A;
+            --muted: rgba(15,23,42,.60);
+            --muted2: rgba(15,23,42,.42);
+            --shadow: 0 18px 60px rgba(2,6,23,.10);
+            --shadow2: 0 10px 26px rgba(2,6,23,.08);
+
+            --pri:#2563EB;
+            --pri2:#60A5FA;
+            --ok:#10B981;
+            --bad:#EF4444;
+            --warn:#F59E0B;
+
+            --focus: 0 0 0 4px rgba(37,99,235,.16);
+        }
+
+        [data-theme="dark"]{
+            --bg0:#070A12;
+            --bg1:#0B1022;
+            --glass: rgba(255,255,255,.07);
+            --glass2: rgba(255,255,255,.05);
+            --stroke: rgba(255,255,255,.12);
+            --stroke2: rgba(255,255,255,.18);
+            --text:#E9ECF7;
+            --muted: rgba(233,236,247,.68);
+            --muted2: rgba(233,236,247,.45);
+            --shadow: 0 18px 60px rgba(0,0,0,.18);
+            --shadow2: 0 10px 26px rgba(0,0,0,.14);
+            --pri:#60A5FA;
+            --pri2:#22D3EE;
+            --focus: 0 0 0 4px rgba(96,165,250,.18);
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            font-family:var(--sans);
+            color:var(--text);
+            background:
+                    radial-gradient(900px 600px at 12% 10%, rgba(96,165,250,.22), transparent 60%),
+                    radial-gradient(800px 520px at 88% 20%, rgba(37,99,235,.14), transparent 60%),
+                    radial-gradient(900px 700px at 50% 100%, rgba(168,85,247,.08), transparent 60%),
+                    linear-gradient(180deg, var(--bg0), var(--bg1));
+            overflow-x:hidden;
+        }
+
+        .wrap{max-width:1120px;margin:0 auto;padding:28px 18px 76px}
+
+        header{
+            display:flex; align-items:center; justify-content:space-between;
+            gap:14px; margin-bottom:16px;
+        }
+        .brand{display:flex; align-items:center; gap:12px}
+        .logo{
+            width:46px;height:46px;border-radius:16px;
+            background:
+                    radial-gradient(14px 14px at 30% 26%, rgba(255,255,255,.55), transparent 62%),
+                    linear-gradient(135deg, rgba(37,99,235,.98), rgba(96,165,250,.68));
+            border:1px solid rgba(255,255,255,.32);
+            box-shadow: 0 16px 48px rgba(37,99,235,.18), var(--shadow2);
+        }
+        [data-theme="dark"] .logo{
+            border:1px solid rgba(255,255,255,.18);
+            box-shadow: 0 16px 48px rgba(96,165,250,.10), var(--shadow2);
+        }
+        .title{display:flex; flex-direction:column; line-height:1.1}
+        .title b{font-size:16px; letter-spacing:.2px}
+        .title span{font-size:12.6px;color:var(--muted)}
+
+        .right{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end}
+
+        .chip{
+            display:inline-flex; align-items:center; gap:8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            background: var(--glass2);
+            border:1px solid var(--stroke);
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow2);
+            color: var(--muted);
+            font-size:12px;
+            user-select:none;
+        }
+        .dot{width:8px;height:8px;border-radius:999px;background:var(--warn); box-shadow:0 0 0 3px rgba(245,158,11,.14)}
+        .dot.ok{background:var(--ok); box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+        .dot.bad{background:var(--bad); box-shadow:0 0 0 3px rgba(239,68,68,.14)}
+
+        .btn{
+            border:none; cursor:pointer;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: var(--glass2);
+            border:1px solid var(--stroke);
+            color: var(--text);
+            font-size:12.6px;
+            box-shadow: var(--shadow2);
+            backdrop-filter: blur(14px);
+            transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+        }
+        .btn:hover{transform:translateY(-1px); filter:brightness(1.02); border-color: var(--stroke2)}
+        .btn:active{transform:translateY(0)}
+        .btn.primary{
+            background: linear-gradient(135deg, rgba(37,99,235,.96), rgba(96,165,250,.66));
+            border-color: rgba(255,255,255,.25);
+            color: white;
+            text-shadow: 0 1px 0 rgba(0,0,0,.12);
+            box-shadow: 0 18px 50px rgba(37,99,235,.16), var(--shadow2);
+        }
+        [data-theme="dark"] .btn.primary{border-color: rgba(255,255,255,.16)}
+
+        .card{
+            background: linear-gradient(180deg, var(--glass), var(--glass2));
+            border:1px solid var(--stroke);
+            border-radius: var(--r);
+            box-shadow: var(--shadow);
+            overflow:hidden;
+            position:relative;
+            backdrop-filter: blur(16px);
+        }
+        .card-h{
+            padding: 16px 16px 12px;
+            border-bottom:1px solid rgba(255,255,255,.20);
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+        }
+        [data-theme="dark"] .card-h{border-bottom:1px solid rgba(255,255,255,.10)}
+        .card-h .h{display:flex; flex-direction:column; gap:4px}
+        .card-h .h b{font-size:13.7px; letter-spacing:.22px}
+        .card-h .h span{font-size:12px;color:var(--muted)}
+        .card-b{padding:14px 16px 16px}
+
+        .subactions{
+            display:flex; gap:10px; align-items:center; justify-content:space-between;
+            flex-wrap:wrap; margin-bottom:12px;
+        }
+        .search{display:flex; gap:10px; align-items:center; flex:1; min-width:240px}
+        .inp{
+            width:100%;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border:1px solid var(--stroke);
+            background: rgba(255,255,255,.65);
+            color: var(--text);
+            outline:none;
+            transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
+        }
+        [data-theme="dark"] .inp{background: rgba(10,14,30,.58)}
+        .inp::placeholder{color: rgba(15,23,42,.35)}
+        [data-theme="dark"] .inp::placeholder{color: rgba(233,236,247,.34)}
+        .inp:focus{box-shadow:var(--focus); border-color: rgba(37,99,235,.35)}
+
+        label{display:block; font-size:12px;color:var(--muted); margin:4px 0 6px}
+        .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+        @media (max-width:520px){ .row{grid-template-columns:1fr} }
+
+        .tag{
+            display:inline-flex; align-items:center; gap:8px;
+            padding: 7px 10px; border-radius:999px;
+            background: var(--glass2);
+            border:1px solid var(--stroke);
+            color: var(--muted);
+            font-size: 11.5px;
+            user-select:none;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow2);
+        }
+
+        .mini{font-size:11.7px; color: var(--muted2); margin-top:10px}
+
+        /* Loader */
+        .loader{display:inline-flex; align-items:center; gap:8px; font-size:12px; color: var(--muted)}
+        .spin{
+            width:14px;height:14px;border-radius:999px;
+            border:2px solid rgba(15,23,42,.18);
+            border-top-color: rgba(37,99,235,.9);
+            animation: r .8s linear infinite;
+        }
+        [data-theme="dark"] .spin{border:2px solid rgba(255,255,255,.18); border-top-color: rgba(96,165,250,.9)}
+        @keyframes r{to{transform:rotate(360deg)}}
+
+        .empty{
+            padding: 18px;
+            color: var(--muted);
+            font-size: 12.6px;
+            border:1px dashed var(--stroke2);
+            border-radius: 16px;
+            background: rgba(255,255,255,.28);
+            text-align:center;
+        }
+        [data-theme="dark"] .empty{background: rgba(0,0,0,.06)}
+
+        /* Toasts */
+        .toasts{
+            position:fixed; top:16px; right:16px;
+            display:flex; flex-direction:column; gap:10px;
+            z-index:9999; width:min(360px, calc(100vw - 32px));
+        }
+        .toast{
+            background: var(--glass);
+            border:1px solid var(--stroke);
+            border-radius: 16px;
+            padding: 11px 12px;
+            box-shadow: var(--shadow);
+            display:flex; gap:10px; align-items:flex-start;
+            backdrop-filter: blur(16px);
+        }
+        .t-dot{margin-top:4px;width:10px;height:10px;border-radius:999px;background:var(--warn); box-shadow:0 0 0 3px rgba(245,158,11,.14)}
+        .toast.ok .t-dot{background:var(--ok); box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+        .toast.bad .t-dot{background:var(--bad); box-shadow:0 0 0 3px rgba(239,68,68,.14)}
+        .toast b{font-size:12.8px}
+        .toast p{margin:2px 0 0; font-size:12px; color: var(--muted)}
+
+        /* Modal (Remover) */
+        .backdrop{
+            position:fixed; inset:0;
+            background: rgba(2,6,23,.45);
+            display:none; align-items:center; justify-content:center;
+            z-index:9998;
+            padding:18px;
+        }
+        [data-theme="dark"] .backdrop{background: rgba(0,0,0,.55)}
+        .modal{
+            width:min(460px, 100%);
+            background: var(--glass);
+            border:1px solid var(--stroke);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+            overflow:hidden;
+        }
+        .modal-h{padding:16px 16px 10px; border-bottom:1px solid rgba(255,255,255,.18)}
+        [data-theme="dark"] .modal-h{border-bottom:1px solid rgba(255,255,255,.10)}
+        .modal-h b{font-size:14px}
+        .modal-b{padding:14px 16px 16px; color: var(--muted); font-size:12.6px}
+        .modal-actions{padding:0 16px 16px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap}
+        .btn.danger{
+            background: rgba(239,68,68,.10);
+            border-color: rgba(239,68,68,.22);
+            color: var(--text);
+        }
+        [data-theme="dark"] .btn.danger{
+            background: rgba(239,68,68,.12);
+            border-color: rgba(239,68,68,.25);
+        }
+
+        /* iOS List */
+        .ios-list{
+            border:1px solid var(--stroke);
+            border-radius: 18px;
+            overflow:hidden;
+            background: rgba(255,255,255,.28);
+        }
+        [data-theme="dark"] .ios-list{background: rgba(0,0,0,.08)}
+        .ios-row{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding: 12px 12px;
+            border-bottom:1px solid rgba(15,23,42,.08);
+            cursor:pointer;
+            user-select:none;
+        }
+        [data-theme="dark"] .ios-row{border-bottom:1px solid rgba(255,255,255,.06)}
+        .ios-row:last-child{border-bottom:none}
+        .ios-row:hover{background: rgba(255,255,255,.28)}
+        [data-theme="dark"] .ios-row:hover{background: rgba(255,255,255,.03)}
+
+        .avatar{
+            width:36px;height:36px;border-radius: 999px; /* mais iOS */
+            background:
+                    radial-gradient(12px 12px at 30% 26%, rgba(255,255,255,.55), transparent 62%),
+                    linear-gradient(135deg, rgba(37,99,235,.95), rgba(96,165,250,.60));
+            border:1px solid rgba(255,255,255,.25);
+            box-shadow: 0 12px 34px rgba(37,99,235,.12);
+            flex:0 0 auto;
+        }
+        [data-theme="dark"] .avatar{border:1px solid rgba(255,255,255,.14); box-shadow: 0 12px 34px rgba(96,165,250,.08)}
+
+        .ios-main{flex:1; min-width:0}
+        .ios-main b{
+            display:block;
+            font-size: 13.4px;
+            letter-spacing:.15px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .ios-main span{
+            display:block;
+            font-size: 12px;
+            color: var(--muted);
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            margin-top: 2px;
+        }
+        .ios-meta{
+            display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+            flex:0 0 auto;
+        }
+        .pill{
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--glass2);
+            border:1px solid var(--stroke);
+            padding: 6px 10px;
+            border-radius: 999px;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow2);
+        }
+
+        /* iOS "..." button */
+        .more{
+            width:34px; height:34px;
+            border-radius: 12px;
+            border:1px solid var(--stroke);
+            background: var(--glass2);
+            display:grid; place-items:center;
+            cursor:pointer;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow2);
+            transition: transform .12s ease, filter .12s ease, border-color .12s ease;
+        }
+        .more:hover{transform: translateY(-1px); filter: brightness(1.02); border-color: var(--stroke2)}
+        .more:active{transform: translateY(0)}
+        .dots{
+            width:16px; height:16px; display:grid; place-items:center;
+            position:relative;
+        }
+        .dots:before, .dots:after, .dots i{
+            content:"";
+            width:3px; height:3px;
+            border-radius:999px;
+            background: var(--muted);
+            position:absolute;
+            left:50%;
+            transform: translateX(-50%);
+        }
+        .dots:before{top:2px}
+        .dots i{top:6.5px}
+        .dots:after{top:11px}
+
+        /* Context menu */
+        .menu{
+            position:fixed;
+            min-width: 220px;
+            background: var(--glass);
+            border:1px solid var(--stroke);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+            padding: 6px;
+            z-index: 9997;
+            display:none;
+            transform-origin: top right;
+            animation: pop .10s ease-out;
+        }
+        @keyframes pop{
+            from{transform: scale(.98); opacity:.6}
+            to{transform: scale(1); opacity:1}
+        }
+        .menu button{
+            width:100%;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            padding: 10px 10px;
+            border:none;
+            background: transparent;
+            color: var(--text);
+            cursor:pointer;
+            border-radius: 12px;
+            font-size: 12.6px;
+        }
+        .menu button:hover{background: rgba(255,255,255,.22)}
+        [data-theme="dark"] .menu button:hover{background: rgba(255,255,255,.06)}
+        .menu small{color: var(--muted); font-size: 11.2px}
+        .menu .danger{color: var(--bad)}
+        .menu hr{
+            border: none;
+            border-top: 1px solid rgba(255,255,255,.18);
+            margin: 6px 4px;
+        }
+        [data-theme="dark"] .menu hr{border-top: 1px solid rgba(255,255,255,.10)}
+
+        /* FAB */
+        .fab{
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            width: 58px;
+            height: 58px;
+            border-radius: 999px;
+            border: 1px solid var(--stroke);
+            background: linear-gradient(135deg, rgba(37,99,235,.96), rgba(96,165,250,.66));
+            box-shadow: 0 18px 50px rgba(37,99,235,.18), var(--shadow2);
+            color: white;
+            cursor: pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition: transform .12s ease, filter .12s ease;
+            z-index: 9996;
+        }
+        .fab:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+        .fab:active{ transform: translateY(0); }
+        .fab svg{ width: 22px; height: 22px; }
+
+        /* Bottom Sheet */
+        .sheet-backdrop{
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,.45);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 9998;
+            padding: 14px;
+        }
+        [data-theme="dark"] .sheet-backdrop{ background: rgba(0,0,0,.55); }
+
+        .sheet{
+            width: min(560px, 100%);
+            background: var(--glass);
+            border: 1px solid var(--stroke);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+            overflow: hidden;
+            transform: translateY(18px);
+            opacity: 0;
+            transition: transform .18s ease, opacity .18s ease;
+        }
+
+        .sheet-backdrop.show .sheet{
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .sheet-top{
+            padding: 12px 16px 10px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom: 1px solid rgba(255,255,255,.18);
+        }
+        [data-theme="dark"] .sheet-top{ border-bottom:1px solid rgba(255,255,255,.10); }
+
+        .grabber{
+            width: 44px;
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.35);
+            margin: 10px auto 0;
+        }
+        [data-theme="dark"] .grabber{ background: rgba(255,255,255,.18); }
+
+        .sheet-title{
+            display:flex;
+            flex-direction:column;
+            gap:2px;
+        }
+        .sheet-title b{ font-size: 14px; }
+        .sheet-title span{ font-size: 12px; color: var(--muted); }
+
+        .sheet-body{
+            padding: 14px 16px 16px;
+        }
+
+        .sheet-actions{
+            display:flex;
+            gap:10px;
+            padding: 0 16px 16px;
+            justify-content:flex-end;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="toasts" id="toasts"></div>
+
+<!-- Context menu -->
+<div class="menu" id="menu">
+    <button id="mCopy">
+        <span>Copiar e-mail</span>
+        <small>⌘C</small>
+    </button>
+    <button id="mCopyId">
+        <span>Copiar ID</span>
+        <small>#</small>
+    </button>
+    <hr/>
+    <button id="mDelete" class="danger">
+        <span>Remover</span>
+        <small>⌫</small>
+    </button>
+</div>
+
+<!-- Modal (Remover) -->
+<div class="backdrop" id="backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-h"><b>Remover usuário?</b></div>
+        <div class="modal-b" id="modalText">—</div>
+        <div class="modal-actions">
+            <button class="btn" id="btnCancel">Cancelar</button>
+            <button class="btn danger" id="btnConfirm">Remover</button>
+        </div>
+    </div>
+</div>
+
+<div class="wrap">
+    <header>
+        <div class="brand">
+            <div class="logo"></div>
+            <div class="title">
+                <b>Sistema de Usuários</b>
+                <span>iOS-style • CRUD com Spring Boot</span>
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="chip" title="Status da API">
+                <span class="dot" id="apiDot"></span>
+                <span id="apiText">Verificando...</span>
+            </div>
+
+            <button class="btn" id="btnTheme" title="Alternar tema">Tema</button>
+            <button class="btn" id="btnReload">Atualizar</button>
+        </div>
+    </header>
+
+    <section class="card">
+        <div class="card-h">
+            <div class="h">
+                <b>Usuários</b>
+                <span>Buscar, listar e remover</span>
+            </div>
+            <span class="tag" id="lastSync">—</span>
+        </div>
+
+        <div class="card-b">
+            <div class="subactions">
+                <div class="search">
+                    <input class="inp" id="q" placeholder="Buscar por nome, e-mail ou ID..."/>
+                    <button class="btn" id="btnReset">Reset</button>
+                </div>
+                <div class="loader" id="loader" style="display:none;">
+                    <span class="spin"></span><span>Carregando...</span>
+                </div>
+            </div>
+
+            <div id="listArea"></div>
+
+            <div class="mini" style="margin-top:10px;">
+                Toque em um usuário para copiar o e-mail rapidamente.
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabAdd" aria-label="Adicionar usuário">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" stroke="white" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+</button>
+
+<!-- Bottom Sheet (Cadastro) -->
+<div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Cadastrar usuário">
+        <div class="grabber"></div>
+        <div class="sheet-top">
+            <div class="sheet-title">
+                <b>Novo usuário</b>
+                <span>Nome e e-mail</span>
+            </div>
+            <button class="btn" id="sheetClose">Fechar</button>
+        </div>
+
+        <div class="sheet-body">
+            <div class="row">
+                <div>
+                    <label for="sheetNome">Nome</label>
+                    <input class="inp" id="sheetNome" placeholder="Ex: Ju" autocomplete="off"/>
+                </div>
+                <div>
+                    <label for="sheetEmail">E-mail</label>
+                    <input class="inp" id="sheetEmail" placeholder="Ex: ju@email.com" autocomplete="off"/>
+                </div>
+            </div>
+
+            <div class="mini">Enter no e-mail cadastra direto.</div>
+        </div>
+
+        <div class="sheet-actions">
+            <button class="btn" id="sheetClear">Limpar</button>
+            <button class="btn primary" id="sheetSave">Cadastrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "/api/usuarios";
+    let cache = [];
+    let pendingDeleteId = null;
+
+    // for context menu
+    let menuUser = null; // {id, email}
+    const menu = () => document.getElementById("menu");
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(s){
+        return String(s ?? "")
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+    }
+
+    function toast(type, title, msg){
+        const wrap = $("toasts");
+        const el = document.createElement("div");
+        el.className = "toast " + (type || "");
+        el.innerHTML = `
+        <span class="t-dot"></span>
+        <div>
+          <b>${escapeHtml(title)}</b>
+          ${msg ? `<p>${escapeHtml(msg)}</p>` : ""}
+        </div>
+      `;
+        wrap.appendChild(el);
+        setTimeout(() => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(-4px)";
+            el.style.transition = "opacity .18s ease, transform .18s ease";
+        }, 2600);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    function setApiStatus(ok, text){
+        const dot = $("apiDot");
+        dot.classList.remove("ok","bad");
+        if(ok === true) dot.classList.add("ok");
+        if(ok === false) dot.classList.add("bad");
+        $("apiText").textContent = text;
+    }
+
+    function setLoading(on){ $("loader").style.display = on ? "inline-flex" : "none"; }
+
+    function formatNow(){
+        return new Date().toLocaleString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    }
+
+    // Theme
+    function applyTheme(theme){
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+        $("btnTheme").textContent = theme === "dark" ? "Dark" : "Light";
+    }
+    function initTheme(){
+        const saved = localStorage.getItem("theme");
+        applyTheme(saved || "light");
+    }
+
+    // API
+    async function safeText(res){
+        try{ return (await res.text())?.trim(); }catch{ return ""; }
+    }
+
+    async function pingApi(){
+        try{
+            const res = await fetch(API_BASE, { method:"GET" });
+            if(!res.ok) throw new Error("HTTP " + res.status);
+            setApiStatus(true, "Online");
+            return true;
+        }catch{
+            setApiStatus(false, "Offline");
+            return false;
+        }
+    }
+
+    async function listar(){
+        const res = await fetch(API_BASE, { method:"GET" });
+        if(!res.ok) throw new Error("Falha ao listar (HTTP " + res.status + ")");
+        return await res.json();
+    }
+
+    async function cadastrar(nome, email){
+        const res = await fetch(API_BASE, {
+            method:"POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({ nome, email })
+        });
+        if(!res.ok){
+            const txt = await safeText(res);
+            throw new Error("Falha ao cadastrar (HTTP " + res.status + ")" + (txt ? " • " + txt : ""));
+        }
+        return await res.json();
+    }
+
+    async function remover(id){
+        const res = await fetch(`${API_BASE}/${encodeURIComponent(id)}`, { method:"DELETE" });
+        if(!res.ok){
+            const txt = await safeText(res);
+            throw new Error("Falha ao remover (HTTP " + res.status + ")" + (txt ? " • " + txt : ""));
+        }
+        return true;
+    }
+
+    // Render
+    function updateBadges(){
+        $("lastSync").textContent = "Atualizado • " + formatNow();
+    }
+
+    function applySearch(){
+        const q = ($("q").value || "").trim().toLowerCase();
+        if(!q) return cache;
+        return cache.filter(u =>
+            String(u.nome || "").toLowerCase().includes(q) ||
+            String(u.email || "").toLowerCase().includes(q) ||
+            String(u.id || "").toLowerCase().includes(q)
+        );
+    }
+
+    function renderList(list){
+        const area = $("listArea");
+        if(!list || list.length === 0){
+            area.innerHTML = `<div class="empty">Nenhum usuário cadastrado ainda.</div>`;
+            return;
+        }
+
+        area.innerHTML = `
+        <div class="ios-list">
+          ${list.map(u => `
+            <div class="ios-row" data-row="${escapeHtml(u.id)}">
+              <div class="avatar"></div>
+
+              <div class="ios-main">
+                <b title="${escapeHtml(u.nome)}">${escapeHtml(u.nome)}</b>
+                <span title="${escapeHtml(u.email)}">${escapeHtml(u.email)}</span>
+              </div>
+
+              <div class="ios-meta">
+                <div class="pill">#${escapeHtml(u.id)}</div>
+                <button class="more" aria-label="Mais ações" data-more="${escapeHtml(u.id)}" data-email="${escapeHtml(u.email)}">
+                  <span class="dots"><i></i></span>
+                </button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+        // attach menu handlers
+        area.querySelectorAll("[data-more]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute("data-more");
+                const email = btn.getAttribute("data-email");
+                openMenu(btn, { id, email });
+            });
+        });
+
+        // tap row -> copy email
+        area.querySelectorAll("[data-row]").forEach(row => {
+            row.addEventListener("click", () => {
+                const id = row.getAttribute("data-row");
+                const u = cache.find(x => String(x.id) === String(id));
+                if(u?.email){
+                    navigator.clipboard?.writeText(u.email);
+                    toast("ok","Copiado","E-mail copiado.");
+                }
+            });
+        });
+    }
+
+    // Menu
+    function openMenu(anchorEl, user){
+        menuUser = user;
+        const m = menu();
+
+        const rect = anchorEl.getBoundingClientRect();
+        const gap = 8;
+        const x = Math.min(window.innerWidth - 12, rect.right) - 220;
+        const y = Math.min(window.innerHeight - 12, rect.bottom + gap);
+
+        m.style.left = Math.max(12, x) + "px";
+        m.style.top = Math.max(12, y) + "px";
+        m.style.display = "block";
+    }
+
+    function closeMenu(){
+        menuUser = null;
+        menu().style.display = "none";
+    }
+
+    // Modal (Remover)
+    function openModal(id){
+        pendingDeleteId = id;
+        $("modalText").innerHTML = `Tem certeza que deseja remover o usuário <b>#${escapeHtml(id)}</b>?`;
+        $("backdrop").style.display = "flex";
+    }
+    function closeModal(){
+        pendingDeleteId = null;
+        $("backdrop").style.display = "none";
+    }
+
+    // Bottom Sheet
+    const sheetBackdrop = $("sheetBackdrop");
+    const sheetNome = $("sheetNome");
+    const sheetEmail = $("sheetEmail");
+
+    function openSheet(){
+        sheetBackdrop.classList.add("show");
+        sheetBackdrop.style.display = "flex";
+        sheetBackdrop.setAttribute("aria-hidden", "false");
+        setTimeout(() => sheetNome.focus(), 50);
+    }
+
+    function closeSheet(){
+        sheetBackdrop.classList.remove("show");
+        sheetBackdrop.setAttribute("aria-hidden", "true");
+        setTimeout(() => { sheetBackdrop.style.display = "none"; }, 160);
+    }
+
+    // Flow
+    async function refresh(){
+        setLoading(true);
+        const ok = await pingApi();
+        if(!ok){
+            renderList([]);
+            setLoading(false);
+            return;
+        }
+
+        try{
+            cache = await listar();
+            updateBadges();
+            renderList(applySearch());
+        }catch(e){
+            toast("bad","Erro ao carregar", e.message);
+        }finally{
+            setLoading(false);
+        }
+    }
+
+    // Events
+    $("btnReload").addEventListener("click", refresh);
+
+    $("q").addEventListener("input", () => renderList(applySearch()));
+    $("btnReset").addEventListener("click", () => { $("q").value=""; renderList(cache); });
+
+    $("btnTheme").addEventListener("click", () => {
+        const cur = document.documentElement.getAttribute("data-theme") || "light";
+        applyTheme(cur === "light" ? "dark" : "light");
+    });
+
+    // Sheet events
+    $("fabAdd").addEventListener("click", (e) => {
+        e.stopPropagation();
+        openSheet();
+    });
+
+    $("sheetClose").addEventListener("click", closeSheet);
+
+    sheetBackdrop.addEventListener("click", (e) => {
+        if(e.target === sheetBackdrop) closeSheet();
+    });
+
+    $("sheetClear").addEventListener("click", () => {
+        sheetNome.value = "";
+        sheetEmail.value = "";
+        sheetNome.focus();
+    });
+
+    $("sheetSave").addEventListener("click", async () => {
+        const nome = (sheetNome.value || "").trim();
+        const email = (sheetEmail.value || "").trim();
+
+        if(!nome || !email){
+            toast("bad","Campos obrigatórios","Preencha nome e e-mail.");
+            return;
+        }
+
+        try{
+            setLoading(true);
+            await cadastrar(nome, email);
+            toast("ok","Cadastrado","Usuário criado com sucesso.");
+            sheetNome.value = "";
+            sheetEmail.value = "";
+            closeSheet();
+            await refresh();
+        }catch(e){
+            toast("bad","Erro ao cadastrar", e.message);
+        }finally{
+            setLoading(false);
+        }
+    });
+
+    sheetEmail.addEventListener("keydown", (e) => {
+        if(e.key === "Enter"){
+            e.preventDefault();
+            $("sheetSave").click();
+        }
+    });
+
+    // Modal events
+    $("btnCancel").addEventListener("click", closeModal);
+    $("backdrop").addEventListener("click", (e) => { if(e.target === $("backdrop")) closeModal(); });
+
+    $("btnConfirm").addEventListener("click", async () => {
+        if(!pendingDeleteId) return;
+        try{
+            setLoading(true);
+            await remover(pendingDeleteId);
+            toast("ok","Removido","Usuário removido com sucesso.");
+            closeModal();
+            await refresh();
+        }catch(e){
+            toast("bad","Erro ao remover", e.message);
+        }finally{
+            setLoading(false);
+        }
+    });
+
+    // Menu actions
+    $("mCopy").addEventListener("click", async () => {
+        if(!menuUser?.email) return;
+        try{
+            await navigator.clipboard.writeText(menuUser.email);
+            toast("ok","Copiado","E-mail copiado.");
+        }catch{
+            toast("bad","Falhou","Não consegui copiar.");
+        }finally{
+            closeMenu();
+        }
+    });
+
+    $("mCopyId").addEventListener("click", async () => {
+        if(!menuUser?.id) return;
+        try{
+            await navigator.clipboard.writeText(String(menuUser.id));
+            toast("ok","Copiado","ID copiado.");
+        }catch{
+            toast("bad","Falhou","Não consegui copiar.");
+        }finally{
+            closeMenu();
+        }
+    });
+
+    $("mDelete").addEventListener("click", () => {
+        if(!menuUser?.id) return;
+        const id = menuUser.id;
+        closeMenu();
+        openModal(id);
+    });
+
+    // Close menu on outside click / scroll / ESC
+    document.addEventListener("click", () => closeMenu());
+    document.addEventListener("scroll", () => closeMenu(), true);
+    document.addEventListener("keydown", (e) => {
+        if(e.key === "Escape"){
+            closeMenu();
+            closeModal();
+            closeSheet();
+        }
+    });
+
+    // Prevent menu click from bubbling
+    menu().addEventListener("click", (e) => e.stopPropagation());
+
+    // Start
+    initTheme();
+    refresh();
+</script>
+</body>
+</html>
